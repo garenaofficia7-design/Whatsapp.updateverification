@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WhatsApp Clone</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0b141a;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* LOGIN SCREEN */
+        .login-screen {
+            background: #111b21;
+            padding: 48px 40px;
+            border-radius: 24px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid #2a3942;
+        }
+
+        .login-screen .logo {
+            font-size: 4rem;
+            color: #00a884;
+            margin-bottom: 12px;
+        }
+
+        .login-screen h1 {
+            color: #d1d7db;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .login-screen p {
+            color: #aebac1;
+            font-size: 0.9rem;
+            margin: 6px 0 24px;
+        }
+
+        .login-screen input {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid #2a3942;
+            background: #202c33;
+            color: #d1d7db;
+            font-size: 1rem;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            margin-bottom: 12px;
+        }
+
+        .login-screen input:focus {
+            border-color: #00a884;
+        }
+
+        .login-screen .btn {
+            width: 100%;
+            padding: 14px;
+            background: #00a884;
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .login-screen .btn:hover {
+            background: #008f72;
+        }
+
+        .login-screen .demo-hint {
+            color: #5a6a72;
+            font-size: 0.75rem;
+            margin-top: 12px;
+        }
+
+        /* MAIN APP */
+        .app {
+            display: none;
+            width: 100%;
+            max-width: 1400px;
+            height: 100vh;
+            max-height: 900px;
+            background: #111b21;
+            border-radius: 0;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        @media (min-width: 768px) {
+            .app {
+                border-radius: 16px;
+                height: 95vh;
+            }
+        }
+
+        .app.active {
+            display: flex;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 100%;
+            max-width: 420px;
+            min-width: 280px;
+            background: #111b21;
+            border-right: 1px solid #2a3942;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .sidebar-header {
+            padding: 16px 20px;
+            background: #202c33;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-header .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #2a3942;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #d1d7db;
+        }
+
+        .sidebar-header .user-name {
+            color: #d1d7db;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-header .icons {
+            display: flex;
+            gap: 16px;
+            color: #aebac1;
+            font-size: 1.1rem;
+        }
+
+        .sidebar-header .icons i {
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .sidebar-header .icons i:hover {
+            color: #d1d7db;
+        }
+
+        .search-bar {
+            padding: 8px 12px;
+            background: #111b21;
+        }
+
+        .search-bar .search-box {
+            background: #202c33;
+            border-radius: 8px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-bar .search-box i {
+            color: #aebac1;
+            font-size: 0.9rem;
+        }
+
+        .search-bar .search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #d1d7db;
+            font-size: 0.9rem;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .search-bar .search-box input::placeholder {
+            color: #aebac1;
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .chat-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-list::-webkit-scrollbar-thumb {
+            background: #2a3942;
+            border-radius: 10px;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            border-bottom: 1px solid #1e2a32;
+        }
+
+        .chat-item:hover {
+            background: #2a3942;
+        }
+
+        .chat-item.active {
+            background: #2a3942;
+        }
+
+        .chat-item .chat-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #2a3942;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #d1d7db;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .chat-item .chat-avatar .online-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            background: #31a24c;
+            border-radius: 50%;
+            border: 2px solid #111b21;
+            display: none;
+        }
+
+        .chat-item .chat-avatar .online-dot.show {
+            display: block;
+        }
+
+        .chat-item .chat-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .chat-item .chat-info .name {
+            font-weight: 500;
+            color: #d1d7db;
+            font-size: 0.95rem;
+        }
+
+        .chat-item .chat-info .last-msg {
+            color: #aebac1;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-item .chat-info .last-msg .typing-indicator {
+            color: #00a884;
+            font-style: italic;
+        }
+
+        .chat-item .chat-meta {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .chat-item .chat-meta .time {
+            color: #aebac1;
+            font-size: 0.7rem;
+        }
+
+        .chat-item .chat-meta .badge {
+            background: #00a884;
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 50px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        /* CHAT WINDOW */
+        .chat-window {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0b141a;
+            height: 100%;
+        }
+
+        .chat-window.empty {
+            align-items: center;
+            justify-content: center;
+            color: #aebac1;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .chat-window.empty .big-icon {
+            font-size: 4rem;
+            color: #2a3942;
+            margin-bottom: 16px;
+        }
+
+        .chat-header {
+            padding: 12px 20px;
+            background: #202c33;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-bottom: 1px solid #2a3942;
+            flex-shrink: 0;
+        }
+
+        .chat-header .chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #2a3942;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #d1d7db;
+            flex-shrink: 0;
+        }
+
+        .chat-header .chat-info .name {
+            font-weight: 500;
+            color: #d1d7db;
+            font-size: 0.95rem;
+        }
+
+        .chat-header .chat-info .status {
+            color: #aebac1;
+            font-size: 0.7rem;
+        }
+
+        .chat-header .icons {
+            margin-left: auto;
+            display: flex;
+            gap: 18px;
+            color: #aebac1;
+            font-size: 1.1rem;
+        }
+
+        .chat-header .icons i {
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .chat-header .icons i:hover {
+            color: #d1d7db;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 20px 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.03"><path d="M20 20 L80 20 L80 80 L20 80 Z" fill="none" stroke="%23aebac1" stroke-width="0.5"/><circle cx="50" cy="50" r="30" fill="none" stroke="%23aebac1" stroke-width="0.5"/></svg>');
+            background-size: 200px;
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: #2a3942;
+            border-radius: 10px;
+        }
+
+        .message {
+            max-width: 65%;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+            animation: fadeIn 0.2s ease;
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.sent {
+            background: #005c4b;
+            color: #d1d7db;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.received {
+            background: #202c33;
+            color: #d1d7db;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message .timestamp {
+            font-size: 0.6rem;
+            color: #8696a0;
+            margin-left: 8px;
+            float: right;
+        }
+
+        .message .status-icon {
+            font-size: 0.6rem;
+            margin-left: 4px;
+            color: #8696a0;
+        }
+
+        .message .status-icon.delivered {
+            color: #53bdeb;
+        }
+
+        .message .status-icon.read {
+            color: #53bdeb;
+        }
+
+        .message .status-icon.sent {
+            color: #8696a0;
+        }
+
+        .message .typing-bubble {
+            display: flex;
+            gap: 4px;
+            padding: 8px 12px;
+            background: #202c33;
+            border-radius: 12px;
+            align-self: flex-start;
+        }
+
+        .message .typing-bubble span {
+            width: 8px;
+            height: 8px;
+            background: #aebac1;
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite;
+        }
+
+        .message .typing-bubble span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .message .typing-bubble span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingBounce {
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-8px);
+            }
+        }
+
+        /* Message Input */
+        .message-input {
+            padding: 12px 20px;
+            background: #202c33;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-top: 1px solid #2a3942;
+            flex-shrink: 0;
+        }
+
+        .message-input .emoji-btn {
+            color: #aebac1;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .message-input .emoji-btn:hover {
+            color: #d1d7db;
+        }
+
+        .message-input input {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            background: #2a3942;
+            color: #d1d7db;
+            font-size: 0.95rem;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .message-input input::placeholder {
+            color: #aebac1;
+        }
+
+        .message-input .send-btn {
+            padding: 10px 18px;
+            background: #00a884;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .message-input .send-btn:hover {
+            background: #008f72;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .sidebar {
+                max-width: 100%;
+                min-width: 0;
+            }
+            .chat-window {
+                display: none;
+            }
+            .chat-window.active {
+                display: flex;
+                position: fixed;
+                inset: 0;
+                border-radius: 0;
+                z-index: 10;
+            }
+            .chat-window.active .back-btn {
+                display: block;
+            }
+            .back-btn {
+                display: none;
+                margin-right: 8px;
+                color: #aebac1;
+                font-size: 1.2rem;
+                cursor: pointer;
+            }
+            .back-btn:hover {
+                color: #d1d7db;
+            }
+            .messages {
+                padding: 16px 20px;
+            }
+            .login-screen {
+                padding: 32px 20px;
+                margin: 20px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .back-btn {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN SCREEN -->
+    <div class="login-screen" id="loginScreen">
+        <div class="logo"><i class="fab fa-whatsapp"></i></div>
+        <h1>WhatsApp Clone</h1>
+        <p>Enter your phone number to start chatting</p>
+        <input type="text" id="phoneInput" placeholder="Phone number (e.g., 1234567890)" />
+        <input type="text" id="nameInput" placeholder="Your name" />
+        <button class="btn" id="loginBtn">Sign In</button>
+        <div class="demo-hint">📱 Demo: 1234567890 / Alessia</div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="app" id="app">
+        <!-- SIDEBAR -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="user-info">
+                    <div class="avatar" id="myAvatar">A</div>
+                    <span class="user-name" id="myName">Alessia</span>
+                </div>
+                <div class="icons">
+                    <i class="fas fa-search"></i>
+                    <i class="fas fa-ellipsis-v"></i>
+                </div>
+            </div>
+            <div class="search-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search or start new chat" id="searchInput" />
+                </div>
+            </div>
+            <div class="chat-list" id="chatList">
+                <!-- Contacts will be injected here -->
+            </div>
+        </div>
+
+        <!-- CHAT WINDOW -->
+        <div class="chat-window empty" id="chatWindow">
+            <div class="big-icon"><i class="fab fa-whatsapp"></i></div>
+            <h3 style="color:#d1d7db;font-weight:400;">Select a chat</h3>
+            <p>Start messaging by choosing a contact</p>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+
+        let currentUser = null;
+        let currentChat = null;
+        let allUsers = [];
+        let allMessages = [];
+
+        // DOM elements
+        const loginScreen = document.getElementById('loginScreen');
+        const app = document.getElementById('app');
+        const phoneInput = document.getElementById('phoneInput');
+        const nameInput = document.getElementById('nameInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const chatList = document.getElementById('chatList');
+        const chatWindow = document.getElementById('chatWindow');
+        const myAvatar = document.getElementById('myAvatar');
+        const myName = document.getElementById('myName');
+
+        // ---------- LOGIN ----------
+        loginBtn.addEventListener('click', () => {
+            const phone = phoneInput.value.trim();
+            const name = nameInput.value.trim() || 'User';
+
+            if (!phone) {
+                alert('Please enter a phone number.');
+                return;
+            }
+
+            currentUser = { phone, name };
+            myAvatar.textContent = name.charAt(0).toUpperCase();
+            myName.textContent = name;
+
+            socket.emit('login', { phone, name });
+
+            loginScreen.style.display = 'none';
+            app.classList.add('active');
+
+            document.title = `WhatsApp — ${name}`;
+        });
+
+        // Enter key for login
+        phoneInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') loginBtn.click();
+        });
+        nameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') loginBtn.click();
+        });
+
+        // ---------- SOCKET EVENTS ----------
+        socket.on('users', (users) => {
+            allUsers = users.filter(u => u.phone !== currentUser?.phone);
+            renderChatList();
+        });
+
+        socket.on('user_online', ({ phone, name }) => {
+            const user = allUsers.find(u => u.phone === phone);
+            if (user) {
+                user.online = 1;
+                renderChatList();
+            }
+            if (currentChat && currentChat.phone === phone) {
+                updateChatHeader(currentChat);
+            }
+        });
+
+        socket.on('user_offline', ({ phone }) => {
+            const user = allUsers.find(u => u.phone === phone);
+            if (user) {
+                user.online = 0;
+                renderChatList();
+            }
+            if (currentChat && currentChat.phone === phone) {
+                updateChatHeader(currentChat);
+            }
+        });
+
+        socket.on('messages', (messages) => {
+            allMessages = messages;
+            if (currentChat) {
+                renderMessages(currentChat.phone);
+            }
+        });
+
+        socket.on('new_message', (message) => {
+            if (message.from_user === currentUser?.phone) return;
+            allMessages.push(message);
+
+            const chatUser = allUsers.find(u => u.phone === message.from_user);
+            if (chatUser) {
+                chatUser.lastMessage = message.content;
+                chatUser.lastMessageTime = message.timestamp;
+                renderChatList();
+            }
+
+            if (currentChat && currentChat.phone === message.from_user) {
+                renderMessages(currentChat.phone);
+                socket.emit('mark_read', { messageId: message.id, from: message.from_user });
+            }
+        });
+
+        socket.on('message_sent', (message) => {
+            allMessages.push(message);
+            if (currentChat && currentChat.phone === message.to_user) {
+                renderMessages(currentChat.phone);
+            }
+            const chatUser = allUsers.find(u => u.phone === message.to_user);
+            if (chatUser) {
+                chatUser.lastMessage = message.content;
+                chatUser.lastMessageTime = message.timestamp;
+                renderChatList();
+            }
+        });
+
+        socket.on('typing_indicator', ({ from, to, isTyping }) => {
+            if (currentChat && currentChat.phone === from) {
+                const statusEl = document.querySelector('.chat-header .status');
+                if (isTyping) {
+                    statusEl.textContent = 'typing...';
+                    statusEl.style.color = '#00a884';
+                } else {
+                    statusEl.textContent = currentChat.online ? 'online' : 'last seen recently';
+                    statusEl.style.color = '#aebac1';
+                }
+            }
+        });
+
+        // ---------- RENDER CHAT LIST ----------
+        function renderChatList() {
+            const sortedUsers = [...allUsers].sort((a, b) => {
+                const timeA = a.lastMessageTime || '';
+                const timeB = b.lastMessageTime || '';
+                return timeB.localeCompare(timeA);
+            });
+
+            chatList.innerHTML = sortedUsers.map(user => `
+                <div class="chat-item ${currentChat && currentChat.phone === user.phone ? 'active' : ''}" 
+                     data-phone="${user.phone}">
+                    <div class="chat-avatar">
+                        ${user.name.charAt(0).toUpperCase()}
+                        <span class="online-dot ${user.online ? 'show' : ''}"></span>
+                    </div>
+                    <div class="chat-info">
+                        <div class="name">${user.name}</div>
+                        <div class="last-msg">${user.lastMessage || 'Tap to chat'}</div>
+                    </div>
+                    <div class="chat-meta">
+                        <div class="time">${user.lastMessageTime ? new Date(user.lastMessageTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : ''}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.chat-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const phone = el.dataset.phone;
+                    const user = allUsers.find(u => u.phone === phone);
+                    if (user) openChat(user);
+                });
+            });
+        }
+
+        // ---------- OPEN CHAT ----------
+        function openChat(user) {
+            currentChat = user;
+            chatWindow.classList.remove('empty');
+            chatWindow.classList.add('active');
+
+            if (!chatWindow.querySelector('.chat-header')) {
+                chatWindow.innerHTML = `
+                    <div class="chat-header">
+                        <div class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i></div>
+                        <div class="chat-avatar">${user.name.charAt(0).toUpperCase()}</div>
+                        <div class="chat-info">
+                            <div class="name">${user.name}</div>
+                            <div class="status">${user.online ? 'online' : 'last seen recently'}</div>
+                        </div>
+                        <div class="icons">
+                            <i class="fas fa-phone"></i>
+                            <i class="fas fa-video"></i>
+                            <i class="fas fa-ellipsis-v"></i>
+                        </div>
+                    </div>
+                    <div class="messages" id="messageContainer"></div>
+                    <div class="message-input">
+                        <span class="emoji-btn"><i class="far fa-smile"></i></span>
+                        <input type="text" id="messageInput" placeholder="Type a message" />
+                        <button class="send-btn" id="sendBtn">Send</button>
+                    </div>
+                `;
+
+                document.getElementById('backBtn').addEventListener('click', () => {
+                    chatWindow.classList.remove('active');
+                });
+
+                document.getElementById('sendBtn').addEventListener('click', sendMessage);
+                document.getElementById('messageInput').addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') sendMessage();
+                });
+
+                const input = document.getElementById('messageInput');
+                let typingTimeout;
+                input.addEventListener('input', () => {
+                    socket.emit('typing', { to: currentChat.phone, isTyping: true });
+                    clearTimeout(typingTimeout);
+                    typingTimeout = setTimeout(() => {
+                        socket.emit('typing', { to: currentChat.phone, isTyping: false });
+                    }, 1000);
+                });
+            }
+
+            updateChatHeader(user);
+            renderMessages(user.phone);
+
+            const unreadMessages = allMessages.filter(m =>
+                m.from_user === user.phone && m.status !== 'read'
+            );
+            unreadMessages.forEach(m => {
+                socket.emit('mark_read', { messageId: m.id, from: user.phone });
+            });
+        }
+
+        function updateChatHeader(user) {
+            const header = chatWindow.querySelector('.chat-header');
+            if (!header) return;
+            const avatar = header.querySelector('.chat-avatar');
+            const name = header.querySelector('.chat-info .name');
+            const status = header.querySelector('.chat-info .status');
+            avatar.textContent = user.name.charAt(0).toUpperCase();
+            name.textContent = user.name;
+            status.textContent = user.online ? 'online' : 'last seen recently';
+            status.style.color = user.online ? '#00a884' : '#aebac1';
+        }
+
+        function renderMessages(phone) {
+            const container = document.getElementById('messageContainer');
+            if (!container) return;
+
+            const msgs = allMessages.filter(m =>
+                (m.from_user === currentUser?.phone && m.to_user === phone) ||
+                (m.from_user === phone && m.to_user === currentUser?.phone)
+            );
+
+            container.innerHTML = msgs.map(m => {
+                const isSent = m.from_user === currentUser?.phone;
+                const time = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                let statusIcon = '';
+                if (isSent) {
+                    if (m.status === 'read') statusIcon = '<span class="status-icon read"><i class="fas fa-check-double"></i></span>';
+                    else if (m.status === 'delivered') statusIcon = '<span class="status-icon delivered"><i class="fas fa-check-double"></i></span>';
+                    else statusIcon = '<span class="status-icon sent"><i class="fas fa-check"></i></span>';
+                }
+
+                return `
+                    <div class="message ${isSent ? 'sent' : 'received'}">
+                        ${m.content}
+                        <span class="timestamp">${time} ${statusIcon}</span>
+                    </div>
+                `;
+            }).join('');
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            if (!content || !currentChat) return;
+            socket.emit('send_message', { to: currentChat.phone, content });
+            input.value = '';
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            document.querySelectorAll('.chat-item').forEach(item => {
+                const name = item.querySelector('.chat-info .name')?.textContent?.toLowerCase() || '';
+                item.style.display = name.includes(query) ? 'flex' : 'none';
+            });
+        });
+
+        phoneInput.value = '1234567890';
+        nameInput.value = 'Alessia';
+
+        setTimeout(() => {
+            if (phoneInput.value && nameInput.value) {
+                loginBtn.click();
+            }
+        }, 500);
+    </script>
+</body>
+</html>
